@@ -1,7 +1,7 @@
 """Gesture engine: turns a stream of IMU frames into OS actions.
 
 Modes (cycled with the mode gesture):
-  0 MOUSE         tilt = cursor, flex = left click, hold flex = right click
+  0 MOUSE         tilt = cursor, quick flex = left click (on release), hold flex = right click
   1 MEDIA         twist wrist (roll rate) = volume up/down, flex = play/pause
   2 PRESENTATION  quick sideways swipe (yaw rate) = next/previous slide, flex = next slide
 
@@ -106,20 +106,25 @@ class GestureEngine:
 
     def _mouse(self, f: ImuFrame, now: float, rising: bool) -> None:
         c = self.cfg
-        dx, dy = self.cursor.step(f.pitch, f.roll)
-        self.backend.move(dx, dy)
+        if self._press_start is None and not f.click:
+            # Freeze the cursor while the finger is bent so the click lands where you aimed.
+            dx, dy = self.cursor.step(f.pitch, f.roll)
+            self.backend.move(dx, dy)
         if rising and now - self._last_click > c.click_debounce_s:
-            self._last_click = now
             self._press_start = now
             self._right_fired = False
-            self.backend.click("left")
-            self.haptic("tick")
+            self.cursor.reset()
         elif f.click and self._press_start is not None and not self._right_fired:
             if now - self._press_start >= c.right_click_hold_s:
                 self._right_fired = True
                 self.backend.click("right")
                 self.haptic("double")
-        if not f.click:
+        elif not f.click and self._press_start is not None:
+            # Released: a short press is a left click (a long one already fired right click).
+            if not self._right_fired:
+                self.backend.click("left")
+                self.haptic("tick")
+            self._last_click = now
             self._press_start = None
 
     def _media(self, f: ImuFrame, now: float, rising: bool) -> None:

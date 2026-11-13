@@ -9,7 +9,7 @@ from pathlib import Path
 
 from .gestures import GestureConfig
 from .motion import CursorConfig
-from .protocol import BEACON_PORT, DATA_PORT, parse_key
+from .protocol import DATA_PORT, GLOVE_PORT, parse_key
 
 DEFAULT_PATH = Path.home() / ".config" / "omni-gauntlet" / "receiver.toml"
 KEY_ENV = "OMNI_GAUNTLET_KEY"
@@ -20,7 +20,7 @@ class ReceiverConfig:
     key: str = ""
     bind: str = "0.0.0.0"
     data_port: int = DATA_PORT
-    beacon_port: int = BEACON_PORT
+    glove_port: int = GLOVE_PORT     # beacons are broadcast to the glove's listening port
     beacon_interval_s: float = 1.0
     beacon_address: str = "255.255.255.255"
     name: str = "omni-host"
@@ -64,7 +64,7 @@ EXAMPLE = """\
 key = "{key}"            # must match OMNI_KEY in firmware/include/secrets.h
 name = "my-laptop"
 data_port = 4210
-beacon_port = 4211
+glove_port = 4212
 
 [gestures]
 upright_deg = 60.0

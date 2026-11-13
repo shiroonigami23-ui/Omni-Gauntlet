@@ -55,8 +55,13 @@ class DryRunBackend:
 class PyAutoGuiBackend:
     """Controls the real mouse and keyboard.
 
-    pyautogui's fail-safe stays ON: slam the real mouse into a screen corner to abort.
+    Glove-driven moves are clamped one pixel inside the screen edges, so the cursor can
+    never reach a corner by itself. pyautogui's fail-safe therefore only fires when *you*
+    slam the real mouse into a corner: control then pauses for a few seconds instead of
+    crashing the receiver.
     """
+
+    PAUSE_ON_FAILSAFE_S = 3.0
 
     def __init__(self) -> None:
         try:
@@ -69,16 +74,34 @@ class PyAutoGuiBackend:
         pyautogui.FAILSAFE = True
         pyautogui.PAUSE = 0
         self._g = pyautogui
+        self._w, self._h = pyautogui.size()
+        self._paused_until = 0.0
+
+    def _guard(self, fn, *args, **kwargs) -> None:
+        import time
+        now = time.monotonic()
+        if now < self._paused_until:
+            return
+        try:
+            fn(*args, **kwargs)
+        except self._g.FailSafeException:
+            self._paused_until = now + self.PAUSE_ON_FAILSAFE_S
+            print(f"  fail-safe: mouse in a corner, glove paused for {self.PAUSE_ON_FAILSAFE_S:.0f}s")
 
     def move(self, dx: int, dy: int) -> None:
-        if dx or dy:
-            self._g.moveRel(dx, dy, _pause=False)
+        if not (dx or dy):
+            return
+        x, y = self._g.position()
+        nx = min(max(x + dx, 1), self._w - 2)
+        ny = min(max(y + dy, 1), self._h - 2)
+        if (nx, ny) != (x, y):
+            self._guard(self._g.moveTo, nx, ny, _pause=False)
 
     def click(self, button: str = "left") -> None:
-        self._g.click(button=button)
+        self._guard(self._g.click, button=button)
 
     def press(self, key: str) -> None:
-        self._g.press(key)
+        self._guard(self._g.press, key)
 
     def hotkey(self, *keys: str) -> None:
-        self._g.hotkey(*keys)
+        self._guard(self._g.hotkey, *keys)

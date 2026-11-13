@@ -32,21 +32,21 @@ Every packet is **signed with a shared pairing key (HMAC-SHA256)** and protected
 - **Secure by default** — HMAC-signed frames + replay protection; strangers on your Wi-Fi can't drive your PC
 - **Zero configuration networking** — the glove discovers the receiver from its broadcast beacon
 - **Two-way haptics** — clicks, mode changes and alerts buzz back on the glove
-- **Hardware-free development** — simulator, 28 Python tests and 42 firmware-core checks run in CI
+- **Hardware-free development** — simulator, 29 Python tests and 47 firmware-core checks run in CI
 - **About ₹1,500** of parts (BOM in [docs/HARDWARE.md](docs/HARDWARE.md))
 
 ## 🧩 Features
 
 | Feature | What it does |
 |---|---|
-| **Mouse mode** | Tilt = cursor with dead zone, exponential curve and smoothing; bend = left click; hold bend = right click |
+| **Mouse mode** | Tilt = cursor with dead zone, exponential curve and smoothing; quick bend = left click (cursor freezes while bent so you don't miss); hold bend 0.8 s = right click |
 | **Media mode** | Twist the wrist (roll rate) = volume up/down; bend = play/pause |
 | **Presentation mode** | Quick sideways swipe (yaw rate) = next/previous slide; bend = next slide |
 | **Mode switch** | Hold the hand upright + bend the finger; the glove buzzes 1/2/3 pulses and shows the mode on the OLED |
 | **Hacker Mode** | Violent shake (>2.6 g) from any mode = show desktop / minimise (Win+D, Super+D, Cmd+M) |
 | **Calibration** | Gyro bias, neutral pose and flex range at boot; press BOOT to recalibrate any time |
 | **Security** | HMAC-SHA256 (128-bit tag) on every datagram; per-boot replay guard |
-| **Auto-discovery** | Signed UDP beacons on port 4211; host forgotten after 5 s of silence |
+| **Auto-discovery** | Signed UDP broadcast beacons to the glove (port 4212), or a fixed `HOST_IP` for networks that block broadcast; host forgotten after 5 s of silence |
 | **OLED status** | Mode, Wi-Fi RSSI, host name, battery % and live flex level |
 | **Simulator** | `omni-receiver simulate` streams a scripted gesture tour through the real protocol |
 
@@ -76,8 +76,9 @@ The project started as a December 2025 design document ([original-design-dec-202
 | Motor driven straight from GPIO26 (~70 mA > safe pin current) | Transistor driver + flyback diode |
 | No charger, switch or regulator | TP4056 with protection, slide switch, 3.3 V LDO |
 | Vibration only at boot | Two-way haptics for clicks, modes and alerts |
-| pyautogui fail-safe disabled | Fail-safe on (corner = abort) |
-| No tests | 28 Python tests, 42 firmware-core checks, PlatformIO build in CI |
+| pyautogui fail-safe disabled | Fail-safe on, glove moves clamped off the corners, pause instead of crash |
+| Left click fired on the first frame of a bend | Click on release, cursor frozen while bent, long hold = right click |
+| No tests | 29 Python tests, 47 firmware-core checks, PlatformIO build in CI |
 
 ## 🛠 Tech Stack
 
@@ -109,7 +110,7 @@ flowchart LR
     GE --> OS[[pyautogui → OS]]
     BC[Beacon] 
   end
-  BC -- broadcast UDP 4211 --> Glove
+  BC -- broadcast UDP 4212 --> Glove
   GE -- haptic UDP 4212 --> HAP
 ```
 
@@ -177,20 +178,23 @@ pio run -t upload && pio device monitor
 - Power the glove, keep your hand flat and still for 1 s, then bend and relax your index finger when the OLED asks.
 - Two buzzes = the glove found your computer. Tilt to move the cursor.
 - No hardware yet? `omni-receiver simulate --demo-key` runs every gesture through the real protocol.
+- **Windows:** allow Python through the firewall for UDP 4210 when prompted (or the glove's frames never arrive).
+- **Direction reversed?** Flip `PITCH_SIGN` / `ROLL_SIGN` / `TWIST_SIGN` / `SWIPE_SIGN` in `firmware/include/config.h` to match how you mounted the sensor.
+- **Network blocks broadcast** (some campus/guest Wi-Fi)? Set `HOST_IP` in `secrets.h` to your computer's IP.
 
 ## 🎮 Usage
 
 | Gesture | Mouse | Media | Presentation |
 |---|---|---|---|
 | Tilt hand | Move cursor | — | — |
-| Bend index finger | Left click | Play / pause | Next slide |
+| Quick bend of index finger | Left click (on release) | Play / pause | Next slide |
 | Hold bend 0.8 s | Right click | — | — |
 | Twist wrist (doorknob) | — | Volume up / down | — |
 | Quick sideways swipe | — | — | Next / previous slide |
 | Hand upright + bend | Next mode | Next mode | Next mode |
 | Violent shake | Show desktop | Show desktop | Show desktop |
 
-> ⚠️ The receiver controls your real mouse and keyboard. pyautogui's fail-safe is on: slam the real mouse into a screen corner to abort. Only run it with a key you generated yourself.
+> ⚠️ The receiver controls your real mouse and keyboard. Glove moves stay 1 px inside the screen edges; slam the *real* mouse into a corner to trigger the fail-safe, which pauses glove control for 3 s. Only run it with a key you generated yourself.
 
 ## ⚙️ Configuration
 

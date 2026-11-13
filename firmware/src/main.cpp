@@ -22,6 +22,9 @@
 #warning "include/secrets.h not found - using secrets.example.h (copy it and set your Wi-Fi + key)"
 #include "secrets.example.h"
 #endif
+#ifndef HOST_IP
+#define HOST_IP ""
+#endif
 
 using namespace omni;
 
@@ -44,6 +47,7 @@ static uint16_t hostPort = DATA_PORT;
 static char hostName[33] = "";
 static uint32_t lastBeaconMs = 0;
 static bool haveHost = false;
+static bool staticHost = false;   // HOST_IP set: no discovery needed
 
 static const char* MODE_NAMES[] = {"MOUSE", "MEDIA", "SLIDES"};
 static int modeIdx = 0;
@@ -69,6 +73,11 @@ static void hapticBlocking(const char* name) {
 
 static void screen(const char* l1, const char* l2 = "", const char* l3 = "") {
   if (!oledOk) return;
+  // A full SSD1306 redraw is ~1 KB over I2C; skip it when nothing changed so the
+  // sensor loop never stalls.
+  static char last[3][24] = {"", "", ""};
+  if (!strncmp(last[0], l1, 23) && !strncmp(last[1], l2, 23) && !strncmp(last[2], l3, 23)) return;
+  strncpy(last[0], l1, 23); strncpy(last[1], l2, 23); strncpy(last[2], l3, 23);
   oled.clearDisplay();
   oled.setTextColor(SSD1306_WHITE);
   oled.setTextSize(1);
@@ -146,6 +155,11 @@ static void connectWifi() {
   }
   Serial.printf("Wi-Fi ok, ip %s\n", WiFi.localIP().toString().c_str());
   udp.begin(GLOVE_PORT);
+  if (strlen(HOST_IP) && host.fromString(HOST_IP)) {
+    staticHost = haveHost = true;
+    strncpy(hostName, HOST_IP, sizeof hostName - 1);
+    Serial.printf("using fixed host %s:%d\n", HOST_IP, DATA_PORT);
+  }
 }
 
 static void pollIncoming(uint32_t now) {
@@ -163,6 +177,7 @@ static void pollIncoming(uint32_t now) {
     if (!strcmp(type, "beacon")) {
       long port;
       if (jsonInt(body, "port", &port) && port > 0 && port < 65536) {
+        if (staticHost) continue;  // fixed host configured: ignore discovery
         if (!haveHost || host != from) {
           Serial.printf("host found: %s:%ld\n", from.toString().c_str(), port);
           buzz("double");
@@ -181,7 +196,7 @@ static void pollIncoming(uint32_t now) {
       }
     }
   }
-  if (haveHost && now - lastBeaconMs > BEACON_TIMEOUT_MS) {
+  if (haveHost && !staticHost && now - lastBeaconMs > BEACON_TIMEOUT_MS) {
     haveHost = false;
     Serial.println("host lost");
   }
@@ -194,10 +209,10 @@ static void sendFrame(const sensors_event_t& a, float gxDps, float gzDps, float 
   f.boot = bootId;
   f.seq = ++seq;
   f.tMs = millis();
-  f.pitch = att.pitch - neutralPitch;
-  f.roll = att.roll - neutralRoll;
-  f.gx = gxDps;
-  f.gz = gzDps;
+  f.pitch = PITCH_SIGN * (att.pitch - neutralPitch);
+  f.roll = ROLL_SIGN * (att.roll - neutralRoll);
+  f.gx = TWIST_SIGN * gxDps;
+  f.gz = SWIPE_SIGN * gzDps;
   f.amag = sqrtf(a.acceleration.x * a.acceleration.x + a.acceleration.y * a.acceleration.y +
                  a.acceleration.z * a.acceleration.z) / 9.80665f;
   f.flex = flexNorm;
@@ -231,6 +246,7 @@ void setup() {
   pinMode(PIN_BOOT_BTN, INPUT_PULLUP);
   analogReadResolution(12);
   Wire.begin(PIN_SDA, PIN_SCL);
+  Wire.setClock(I2C_HZ);
 
   oledOk = oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   if (!oledOk) Serial.println("WARN: OLED not found at 0x3C - continuing without display");
@@ -277,7 +293,7 @@ void loop() {
     float gy = (g.gyro.y - gyroBias[1]) * R2D;
     float gz = (g.gyro.z - gyroBias[2]) * R2D;
     att.update(a.acceleration.x, a.acceleration.y, a.acceleration.z, gx, gy, dt, COMP_ALPHA);
-    lastFlex = flex.normalise(analogRead(PIN_FLEX));
+    lastFlex = flex.smooth(flex.normalise(analogRead(PIN_FLEX)), FLEX_SMOOTH);
     bool click = flex.update(lastFlex, FLEX_ON, FLEX_OFF);
     if (click && !lastClick && !haveHost) buzz("tick");  // local feedback until a host answers
     lastClick = click;

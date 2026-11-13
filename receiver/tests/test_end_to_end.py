@@ -28,7 +28,7 @@ def test_full_gesture_tour_over_udp():
     rx, backend, sent = run_tour()
     assert rx.stats.frames == sent
     names = backend.names()
-    assert names[:3] == ["click left", "click left", "click right"]
+    assert names[:2] == ["click left", "click right"]
     assert "press volumeup" in names and "press volumedown" in names
     assert "press playpause" in names
     i = names.index("press playpause")

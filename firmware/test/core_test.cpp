@@ -78,10 +78,19 @@ static void test_attitude() {
   Attitude a;
   a.update(0, 0, 1, 0, 0, 0.015f, 0.98f);           // flat
   CHECK(fabsf(a.pitch) < 0.01f && fabsf(a.roll) < 0.01f);
-  for (int i = 0; i < 400; i++) a.update(-0.5f, 0, 0.866f, 0, 0, 0.015f, 0.98f);  // tilted 30 deg
+  for (int i = 0; i < 400; i++) a.update(0.5f, 0, 0.866f, 0, 0, 0.015f, 0.98f);  // fingers up 30 deg
   CHECK(fabsf(a.pitch - 30.0f) < 0.5f);
+  Attitude r; r.update(0, 0, 1, 0, 0, 0.015f, 0.98f);
+  for (int i = 0; i < 400; i++) r.update(0, 0.5f, 0.866f, 0, 0, 0.015f, 0.98f);  // tilt right 30 deg
+  CHECK(fabsf(r.roll - 30.0f) < 0.5f);
+  Attitude q; q.update(0, 0, 1, 0, 0, 0.015f, 0.98f);
+  for (int i = 0; i < 10; i++) q.update(0, 0, 1, 100.0f, 0, 0.015f, 0.98f);  // roll gyro, same sign as accel roll
+  CHECK(q.roll > 5.0f);
+  Attitude w; w.update(0, 0.05f, -1, 0, 0, 0.015f, 0.98f);   // palm up, roll ~ +177
+  w.update(0, -0.05f, -1, 0, 0, 0.015f, 0.98f);                // crosses to ~ -177
+  CHECK(w.roll < -170.0f);                                       // resynced, not averaged to ~0
   Attitude b; b.update(0, 0, 1, 0, 0, 0.015f, 0.98f);
-  for (int i = 0; i < 10; i++) b.update(0, 0, 1, 0, 100.0f, 0.015f, 0.98f);  // pure gyro motion
+  for (int i = 0; i < 10; i++) b.update(0, 0, 1, 0, -100.0f, 0.015f, 0.98f);  // fingers-up rotation (gy < 0)
   CHECK(b.pitch > 5.0f && b.pitch < 15.0f);         // integrates, mildly pulled back by accel
 }
 
@@ -94,6 +103,8 @@ static void test_flex() {
   CHECK(f.update(0.65f, 0.6f, 0.4f));
   CHECK(f.update(0.5f, 0.6f, 0.4f));               // hysteresis keeps it held
   CHECK(!f.update(0.35f, 0.6f, 0.4f));
+  Flex s; CHECK(s.smooth(1.0f, 0.3f) == 1.0f);       // first sample primes
+  CHECK(fabsf(s.smooth(0.0f, 0.3f) - 0.7f) < 1e-6f);
   Flex inv; inv.straight = 3000; inv.bent = 1000;  // wiring that reads the other way round
   CHECK(fabsf(inv.normalise(1000) - 1.0f) < 1e-6f);
 }

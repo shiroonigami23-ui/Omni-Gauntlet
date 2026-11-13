@@ -44,7 +44,7 @@ def cmd_run(args) -> None:
     backend = DryRunBackend(echo=True) if args.dry_run else PyAutoGuiBackend()
     rx = Receiver(cfg, backend, verbose=True)
     print(f"omni-receiver {__version__} listening on udp/{rx.port}, "
-          f"beacons on udp/{cfg.beacon_port} ({'dry run' if args.dry_run else 'LIVE control'})")
+          f"beacons to udp/{cfg.glove_port} ({'dry run' if args.dry_run else 'LIVE control'})")
     print("Mode: MOUSE. Hold your hand upright + flex to switch modes. Ctrl+C to quit.")
     try:
         stats = rx.serve()

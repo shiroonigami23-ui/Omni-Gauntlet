@@ -10,3 +10,7 @@
 
 // Name shown by the receiver for this glove
 #define DEVICE_ID     "gauntlet-01"
+
+// Optional: receiver IP if your network blocks broadcast (some campus/guest Wi-Fi does).
+// Leave empty to discover the receiver automatically.
+#define HOST_IP       ""

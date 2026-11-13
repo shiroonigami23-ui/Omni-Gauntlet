@@ -66,7 +66,7 @@ GPIO26 ──[1 kΩ]──► base (2N2222)
 ## Mounting tips
 
 - Put the ESP32, battery and charger in a small pouch or 3D-printed case on the **back of the hand or the wrist**, never the palm.
-- Mount the MPU-6050 **flat on the back of the hand**, with its X axis pointing towards the fingers. Calibration takes "flat" as neutral.
+- Mount the MPU-6050 **flat on the back of the hand, component side up, with the X arrow pointing towards the fingertips**. Calibration takes "flat" as neutral. If any direction comes out reversed, flip the matching `*_SIGN` in `firmware/include/config.h`; there's no need to re-mount.
 - Leave the TP4056's USB port reachable for charging.
 - Add strain relief (a dab of hot glue) where wires leave the boards; gloves flex a lot.
 

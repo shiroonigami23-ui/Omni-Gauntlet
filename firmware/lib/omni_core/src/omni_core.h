@@ -47,7 +47,10 @@ float accelRoll(float ay, float az);
 struct Flex {
   float straight = 0, bent = 4095;
   bool clicked = false;
+  float level = 0;
+  bool primed = false;
   float normalise(int raw) const;
+  float smooth(float norm, float alpha);         // EMA against ADC noise
   bool update(float norm, float on, float off);  // returns current click state
 };
 

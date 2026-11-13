@@ -58,11 +58,11 @@ def tour() -> Iterator[tuple[str, Pose]]:
     for p in _hold(rest, 0.3):
         yield "rest", p
     for p in _hold(Pose(flex=0.9), 0.1):
-        yield "flex (left click)", p
+        yield "quick flex (left click on release)", p
     for p in _hold(rest, 0.3):
         yield "rest", p
     for p in _hold(Pose(flex=0.9), 1.0):
-        yield "hold flex (right click)", p
+        yield "hold flex 1 s (right click)", p
     for p in _hold(rest, 0.4):
         yield "rest", p
     label = "upright + flex (mode -> MEDIA)"

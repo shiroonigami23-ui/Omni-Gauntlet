@@ -134,14 +134,17 @@ size_t verifyDatagram(const uint8_t* key, size_t keyLen, char* data, size_t len,
 // =================================================================== filters
 static const float RAD2DEG = 57.2957795f;
 
-float accelPitch(float ax, float ay, float az) { return atan2f(-ax, sqrtf(ay * ay + az * az)) * RAD2DEG; }
+// Sensor frame: X towards the fingertips, Y towards the thumb side, Z out of the back of the hand.
+// Pitch > 0 = fingers up; roll > 0 = tilt right (little-finger side down).
+float accelPitch(float ax, float ay, float az) { return atan2f(ax, sqrtf(ay * ay + az * az)) * RAD2DEG; }
 float accelRoll(float ay, float az) { return atan2f(ay, az) * RAD2DEG; }
 
 void Attitude::update(float ax, float ay, float az, float gxDps, float gyDps, float dt, float alpha) {
   float ap = accelPitch(ax, ay, az), ar = accelRoll(ay, az);
   if (!primed) { pitch = ap; roll = ar; primed = true; return; }
-  pitch = alpha * (pitch + gyDps * dt) + (1 - alpha) * ap;
-  roll = alpha * (roll + gxDps * dt) + (1 - alpha) * ar;
+  pitch = alpha * (pitch - gyDps * dt) + (1 - alpha) * ap;  // fingers up = negative rotation about Y
+  if (fabsf(ar - roll) > 180.0f) roll = ar;                 // palm flipped past +-180: resync, don't blend
+  else roll = alpha * (roll + gxDps * dt) + (1 - alpha) * ar;
 }
 
 float Flex::normalise(int raw) const {
@@ -149,6 +152,12 @@ float Flex::normalise(int raw) const {
   if (fabsf(span) < 1) return 0;
   float v = (raw - straight) / span;
   return v < 0 ? 0 : (v > 1 ? 1 : v);
+}
+
+float Flex::smooth(float norm, float alpha) {
+  level = primed ? level + alpha * (norm - level) : norm;
+  primed = true;
+  return level;
 }
 
 bool Flex::update(float norm, float on, float off) {

@@ -9,13 +9,13 @@
 
 // ---------------------------------------------------------------- network
 #define DATA_PORT      4210  // receiver listens here
-#define BEACON_PORT    4211  // receiver broadcasts discovery beacons here
-#define GLOVE_PORT     4212  // glove listens here (beacons + haptics)
+#define GLOVE_PORT     4212  // glove listens here: discovery beacons (broadcast) + haptics
 #define BEACON_TIMEOUT_MS 5000  // forget the host if no beacon for this long
 
 // ---------------------------------------------------------------- timing
 #define FRAME_INTERVAL_MS  15   // ~66 Hz
-#define OLED_INTERVAL_MS  200   // 5 Hz screen refresh
+#define OLED_INTERVAL_MS  250   // status check rate; the screen is only redrawn when text changes
+#define I2C_HZ        400000   // fast-mode I2C keeps OLED redraws short
 #define WIFI_TIMEOUT_MS 15000
 
 // ---------------------------------------------------------------- sensing
@@ -23,3 +23,12 @@
 #define FLEX_ON         0.60f  // normalised bend to start a click
 #define FLEX_OFF        0.40f  // ... and to release it (hysteresis)
 #define CAL_SAMPLES     200
+#define FLEX_SMOOTH     0.35f  // EMA factor for the flex ADC (lower = smoother)
+
+// ---------------------------------------------------------------- mounting
+// Mount the MPU-6050 flat on the back of the hand, X arrow towards the fingertips.
+// If a direction comes out reversed on your build, flip the matching sign here.
+#define PITCH_SIGN  1   // +1: fingers up = positive pitch
+#define ROLL_SIGN   1   // +1: tilt right = positive roll
+#define TWIST_SIGN  1   // roll rate sign (media volume direction)
+#define SWIPE_SIGN  1   // yaw rate sign (slide direction)

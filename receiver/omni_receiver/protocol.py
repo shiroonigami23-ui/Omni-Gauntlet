@@ -7,7 +7,7 @@ sent, so no canonical JSON form is needed on either side.
 Message types (``type`` field):
 
 * ``imu``     glove -> receiver, ~66 Hz sensor frame
-* ``beacon``  receiver -> broadcast, lets the glove discover the host automatically
+* ``beacon``  receiver -> broadcast to GLOVE_PORT, lets the glove discover the host automatically
 * ``haptic``  receiver -> glove, asks the glove to buzz a named pattern
 """
 
@@ -22,8 +22,7 @@ from dataclasses import dataclass
 PROTOCOL_VERSION = 1
 MAC_HEX_LEN = 32
 DATA_PORT = 4210      # glove -> receiver (imu frames)
-BEACON_PORT = 4211    # receiver -> broadcast (discovery)
-GLOVE_PORT = 4212     # glove listens here (beacons are addressed to it, haptics come back here)
+GLOVE_PORT = 4212     # glove listens here: discovery beacons (broadcast) and haptic requests
 MAX_DATAGRAM = 512
 
 

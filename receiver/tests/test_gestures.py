@@ -29,10 +29,23 @@ def test_click_and_right_click():
     c = Clock()
     feed(e, c, 0.2)
     feed(e, c, 0.1, click=True)
+    assert b.names() == [], "left click fires on release, not on press"
     feed(e, c, 0.3)
     feed(e, c, 1.0, click=True)
-    assert b.names() == ["click left", "click left", "click right"]
-    assert h == ["tick", "tick", "double"]
+    feed(e, c, 0.3)
+    assert b.names() == ["click left", "click right"], "long hold = right click only"
+    assert h == ["tick", "double"]
+
+
+def test_cursor_freezes_while_finger_is_bent():
+    e, b, _ = make()
+    c = Clock()
+    feed(e, c, 0.3, roll=25)
+    moves_before = len(b.events)
+    feed(e, c, 0.2, roll=25, click=True)
+    assert len(b.events) == moves_before, "aim stays put during the click"
+    feed(e, c, 0.1, roll=25)
+    assert b.names() == ["click left"]
 
 
 def test_upright_flex_cycles_modes_without_clicking():

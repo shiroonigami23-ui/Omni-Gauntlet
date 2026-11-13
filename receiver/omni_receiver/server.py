@@ -62,7 +62,7 @@ class Receiver:
         msg = P.encode(P.beacon_message(self.port, self.cfg.name), self.key)
         while not self._stop.is_set():
             try:
-                bsock.sendto(msg, (self.cfg.beacon_address, self.cfg.beacon_port))
+                bsock.sendto(msg, (self.cfg.beacon_address, self.cfg.glove_port))
             except OSError:
                 pass
             self._stop.wait(self.cfg.beacon_interval_s)

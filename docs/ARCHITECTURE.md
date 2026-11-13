@@ -22,7 +22,7 @@ flowchart LR
     GE --> OS[[pyautogui → OS]]
     BC[Beacon] 
   end
-  BC -- broadcast UDP 4211 --> Glove
+  BC -- broadcast UDP 4212 --> Glove
   GE -- haptic UDP 4212 --> HAP
 ```
 
@@ -40,7 +40,7 @@ flowchart LR
 ## 3. Data / Control Flow
 
 1. The glove boots, connects to Wi-Fi, calibrates, and listens on UDP 4212.
-2. The receiver broadcasts a signed beacon every second; the glove verifies it and learns the host IP and port.
+2. The receiver broadcasts a signed beacon to UDP 4212 every second; the glove verifies it and learns the host IP and port.
 3. Every 15 ms the glove sends a signed frame (pitch, roll, roll rate, yaw rate, |a|, flex, click).
 4. The receiver verifies the MAC, checks sequence and boot id, and feeds the gesture engine.
 5. Actions go to the OS through pyautogui; haptic patterns go back to the glove.
