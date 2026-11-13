@@ -1,0 +1,5 @@
+{
+  "name": "Omni-Gauntlet",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11",
+  "postCreateCommand": "cd receiver && pip install -e \".[dev]\" && pytest -q && make -C ../firmware/test"
+}

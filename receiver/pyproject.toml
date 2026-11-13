@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omni-receiver"
+version = "0.2.0"
+description = "Host receiver for the Omni-Gauntlet gesture glove: authenticated UDP packets -> mouse, media and presentation control"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Aryan Singh Chandel" }]
+dependencies = []
+
+[project.optional-dependencies]
+control = ["pyautogui>=0.9.54"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+omni-receiver = "omni_receiver.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["omni_receiver*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
