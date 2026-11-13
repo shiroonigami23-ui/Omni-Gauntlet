@@ -67,3 +67,42 @@ def test_replayed_capture_is_ignored():
     rx.stop()
     assert rx.stats.frames == 5
     assert rx.stats.rejected_replay == 5
+
+
+def test_glove_discovers_host_and_receives_haptics():
+    """Acts exactly like the firmware: listen on the glove port, learn the host from
+    the signed beacon, send frames from that same socket, get haptics back on it."""
+    import socket as S
+    from omni_receiver.simulator import Pose
+
+    key = P.generate_key()
+    glove_sock = S.socket(S.AF_INET, S.SOCK_DGRAM)
+    glove_sock.bind(("127.0.0.1", 0))
+    glove_sock.settimeout(3)
+    cfg = ReceiverConfig(key=key, bind="127.0.0.1", data_port=0,
+                         beacon_address="127.0.0.1", glove_port=glove_sock.getsockname()[1],
+                         beacon_interval_s=0.1)
+    rx = Receiver(cfg, DryRunBackend())
+    t = threading.Thread(target=rx.serve, daemon=True)
+    t.start()
+
+    data, (host_ip, _) = glove_sock.recvfrom(512)          # 1. beacon arrives on the glove port
+    beacon = P.decode(data, cfg.key_bytes)
+    assert beacon["type"] == "beacon" and beacon["port"] == rx.port
+
+    glove = SimulatedGlove(cfg.key_bytes)                     # 2. frames to the advertised port
+    for pose in [Pose()] * 3 + [Pose(flex=0.9)] * 3 + [Pose()] * 3:
+        glove_sock.sendto(glove.frame(pose), (host_ip, beacon["port"]))
+        time.sleep(0.015)
+
+    haptic = None                                             # 3. click -> haptic back to the glove
+    deadline = time.time() + 3
+    while time.time() < deadline:
+        msg = P.decode(glove_sock.recvfrom(512)[0], cfg.key_bytes)
+        if msg["type"] == "haptic":
+            haptic = msg
+            break
+    rx.stop()
+    t.join(2)
+    glove_sock.close()
+    assert haptic is not None and haptic["pattern"] == "tick"

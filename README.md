@@ -32,7 +32,7 @@ Every packet is **signed with a shared pairing key (HMAC-SHA256)** and protected
 - **Secure by default** — HMAC-signed frames + replay protection; strangers on your Wi-Fi can't drive your PC
 - **Zero configuration networking** — the glove discovers the receiver from its broadcast beacon
 - **Two-way haptics** — clicks, mode changes and alerts buzz back on the glove
-- **Hardware-free development** — simulator, 29 Python tests and 47 firmware-core checks run in CI
+- **Hardware-free development** — simulator, 30 Python tests and 47 firmware-core checks run in CI
 - **About ₹1,500** of parts (BOM in [docs/HARDWARE.md](docs/HARDWARE.md))
 
 ## 🧩 Features
@@ -78,7 +78,7 @@ The project started as a December 2025 design document ([original-design-dec-202
 | Vibration only at boot | Two-way haptics for clicks, modes and alerts |
 | pyautogui fail-safe disabled | Fail-safe on, glove moves clamped off the corners, pause instead of crash |
 | Left click fired on the first frame of a bend | Click on release, cursor frozen while bent, long hold = right click |
-| No tests | 29 Python tests, 47 firmware-core checks, PlatformIO build in CI |
+| No tests | 30 Python tests, 47 firmware-core checks, PlatformIO build in CI |
 
 ## 🛠 Tech Stack
 
