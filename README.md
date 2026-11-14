@@ -2,7 +2,7 @@
 
 <img src="assets/hero.png" alt="Omni-Gauntlet" width="100%">
 
-# 🧤 Omni-Gauntlet
+ 🧤 Omni-Gauntlet
 
 ### A wireless gesture-control glove — ESP32 + MPU-6050 + flex sensor streaming signed UDP frames to a Python receiver that drives your mouse, media and slides
 
