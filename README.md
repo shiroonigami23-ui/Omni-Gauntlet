@@ -18,6 +18,8 @@
 
 ---
 
+<p align="center"><a href="assets/trailer.mp4"><img src="assets/trailer.gif" alt="Omni-Gauntlet concept trailer" width="440"></a><br><sub>Concept trailer · <a href="assets/trailer.mp4">watch with sound (MP4)</a></sub></p>
+
 <p align="center"><img src="assets/in-use.png" alt="Omni-Gauntlet art" width="49%"> <img src="assets/gesture-modes.png" alt="Omni-Gauntlet art" width="49%"></p>
 
 ## 📖 Overview
