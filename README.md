@@ -55,7 +55,7 @@ Every packet is **signed with a shared pairing key (HMAC-SHA256)** and protected
 ## 🔬 Inside the Gauntlet
 
 <table><tr>
-<td width="50%" align="center"><img src="assets/exploded.png" width="100%"><br><sub><b>Exploded view</b> — LiPo, ESP32, MPU-6050, flex strips, haptic motor</sub></td>
+<td width="50%" align="center"><img src="assets/explode.png" width="100%"><br><sub><b>Exploded view</b> — LiPo, ESP32, MPU-6050, flex strips, haptic motor</sub></td>
 <td width="50%" align="center"><img src="assets/wrist-module.png" width="100%"><br><sub><b>Wrist module</b> — OLED status and haptic feedback</sub></td>
 </tr></table>
 
